@@ -16,12 +16,44 @@ if [ -f "$PAIR_FILE" ]; then
     LOCATION=$(cat "$LOCATION_FILE")
   fi
   
+  # Check if the pair info is already in the title (first non-comment, non-empty line)
+  FIRST_LINE=$(grep -v '^#' "$1" | grep -v '^$' | head -n 1)
+  if [[ "$FIRST_LINE" == *"$PAIR_INFO"* ]]; then
+    # Pair info already in title, skip adding it in the body
+    exit 0
+  fi
+  
+  echo "--- BEFORE ---" >&2
+  cat "$1" >&2
+  echo "--- END BEFORE ---" >&2
+
   if [ "$LOCATION" = "title" ]; then
-    # Add to title (first line)
-    sed -i '' "1s/$/ $PAIR_INFO/" "$1"
+    # Use shell to append pair info to the first non-comment, non-empty line and remove the blank line after it
+    OUTFILE="$1.tmp"
+    FOUND_TITLE=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      if [ $FOUND_TITLE -eq 0 ] && [[ ! "$line" =~ ^# ]] && [[ ! -z "$line" ]]; then
+        echo "$line $PAIR_INFO" >> "$OUTFILE"
+        FOUND_TITLE=1
+        continue
+      fi
+      if [ $FOUND_TITLE -eq 1 ] && [[ -z "$line" ]]; then
+        # Skip the first blank line after the title
+        FOUND_TITLE=2
+        continue
+      fi
+      echo "$line" >> "$OUTFILE"
+    done < "$1"
+    mv "$OUTFILE" "$1"
   else
     # Add to body (new line at the end)
-    echo "" >> "$1"
-    echo "$PAIR_INFO" >> "$1"
+    cat "$1" > "$1.tmp"
+    echo "" >> "$1.tmp"
+    echo "$PAIR_INFO" >> "$1.tmp"
+    mv "$1.tmp" "$1"
   fi
+
+  echo "--- AFTER ---" >&2
+  cat "$1" >&2
+  echo "--- END AFTER ---" >&2
 fi

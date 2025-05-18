@@ -42,14 +42,9 @@ git pair --with username
 git pair --with username --location body
 ```
 
-5. **Commit as usual:**
+5. **Commit as usual (default behavior):**
 
 ```bash
-# With pair info in title (default)
-git commit -m "refactor: fix issue with auth"
-# => message becomes: refactor: fix issue with auth (paired with @username)
-
-# With pair info in body
 git commit -m "refactor: fix issue with auth"
 # => message becomes:
 # refactor: fix issue with auth
@@ -57,7 +52,15 @@ git commit -m "refactor: fix issue with auth"
 # (paired with @username)
 ```
 
-6. **Disable pairing mode:**
+6. **[Optional] Commit with pair info on the same line as the title:**
+
+```bash
+./git-pair-commit -m "refactor: fix issue with auth"
+# => message becomes: refactor: fix issue with auth (paired with @username)
+# Note: The pair info is only in the title, not duplicated in the body.
+```
+
+7. **Disable pairing mode:**
 
 ```bash
 git pair --off
@@ -104,6 +107,7 @@ git pair --with your_username --location body
 ## 📁 Files
 
 - `git-pair`: the CLI script
+- `git-pair-commit`: optional commit wrapper for pair info in title
 - `hooks/prepare-commit-msg`: Git hook
 - `install.sh`: helper to install hook
 
