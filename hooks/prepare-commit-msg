@@ -4,9 +4,24 @@
 # Purpose: Automatically append pair info to commit messages if pair mode is active
 
 PAIR_FILE=".git/.pair"
+LOCATION_FILE=".git/.pair_location"
 
 if [ -f "$PAIR_FILE" ]; then
   PAIRER=$(cat "$PAIR_FILE")
-  echo "" >> "$1"
-  echo "(paired with @$PAIRER)" >> "$1"
+  PAIR_INFO="(paired with @$PAIRER)"
+  
+  # Read the location preference (default to title if not set)
+  LOCATION="title"
+  if [ -f "$LOCATION_FILE" ]; then
+    LOCATION=$(cat "$LOCATION_FILE")
+  fi
+  
+  if [ "$LOCATION" = "title" ]; then
+    # Add to title (first line)
+    sed -i '' "1s/$/ $PAIR_INFO/" "$1"
+  else
+    # Add to body (new line at the end)
+    echo "" >> "$1"
+    echo "$PAIR_INFO" >> "$1"
+  fi
 fi

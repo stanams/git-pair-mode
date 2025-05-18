@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Git Pair Mode - A tool to annotate Git commits with pair programming metadata
+
+PAIR_FILE=".git/.pair"
+LOCATION_FILE=".git/.pair_location"
+
+function show_help() {
+  echo "Usage: git pair [OPTIONS]"
+  echo ""
+  echo "Options:"
+  echo "  --with USERNAME    Enable pair mode with specified username"
+  echo "  --off             Disable pair mode"
+  echo "  --location WHERE  Set where to show pair info (title/body)"
+  echo "  --help            Show this help message"
+  echo ""
+  echo "Examples:"
+  echo "  git pair --with alice"
+  echo "  git pair --with alice --location body"
+  echo "  git pair --off"
+}
+
+function enable_pair_mode() {
+  if [ -z "$1" ]; then
+    echo "Error: Please provide a username"
+    show_help
+    exit 1
+  fi
+  echo "$1" > "$PAIR_FILE"
+  echo "✅ Pair mode enabled with @$1"
+}
+
+function disable_pair_mode() {
+  rm -f "$PAIR_FILE"
+  rm -f "$LOCATION_FILE"
+  echo "✅ Pair mode disabled"
+}
+
+function set_location() {
+  if [ -z "$1" ]; then
+    echo "Error: Please specify location (title/body)"
+    show_help
+    exit 1
+  fi
+  
+  if [ "$1" != "title" ] && [ "$1" != "body" ]; then
+    echo "Error: Location must be either 'title' or 'body'"
+    show_help
+    exit 1
+  fi
+  
+  echo "$1" > "$LOCATION_FILE"
+  echo "✅ Pair info will be shown in the $1"
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --with)
+      enable_pair_mode "$2"
+      shift 2
+      ;;
+    --off)
+      disable_pair_mode
+      shift
+      ;;
+    --location)
+      set_location "$2"
+      shift 2
+      ;;
+    --help)
+      show_help
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      show_help
+      exit 1
+      ;;
+  esac
+done
+
+# If no arguments provided, show help
+if [ $# -eq 0 ]; then
+  show_help
+fi 

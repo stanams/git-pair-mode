@@ -6,6 +6,7 @@ A lightweight tool to annotate Git commits with pair programming metadata — no
 
 - Enable/disable pairing mode in your repo
 - Automatically appends `(paired with @username)` to commit messages
+- Choose where to show pair info (in title or commit body)
 - Uses Git hooks, works locally, no login needed
 
 ## 🚀 Installation
@@ -34,14 +35,26 @@ chmod +x install.sh
 4. **Enable pairing mode:**
 
 ```bash
+# Basic usage (pair info in title)
 git pair --with username
+
+# With pair info in commit body
+git pair --with username --location body
 ```
 
 5. **Commit as usual:**
 
 ```bash
+# With pair info in title (default)
 git commit -m "refactor: fix issue with auth"
 # => message becomes: refactor: fix issue with auth (paired with @username)
+
+# With pair info in body
+git commit -m "refactor: fix issue with auth"
+# => message becomes:
+# refactor: fix issue with auth
+#
+# (paired with @username)
 ```
 
 6. **Disable pairing mode:**
@@ -70,6 +83,7 @@ sudo mv git-pair /usr/local/bin/git-pair
 
 ```bash
 git pair --with your_username
+git pair --with your_username --location body
 ```
 
 > ℹ️ You can check that `/usr/local/bin` is in your path using:
@@ -78,15 +92,14 @@ git pair --with your_username
 > echo $PATH
 > ```
 
-````
-
 ---
 
 ## 🧪 Test locally
+
 ```bash
 ./git-pair --with alice
 # Then make a commit and inspect the message
-````
+```
 
 ## 📁 Files
 
