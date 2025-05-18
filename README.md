@@ -157,3 +157,5 @@ If GitHub username verification fails:
 3. Verify the GitHub username exists
 
 ---
+
+mkdir -p tests
