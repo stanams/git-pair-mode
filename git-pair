@@ -83,6 +83,28 @@ function enable_pair_mode() {
 
   echo "$1" > "$PAIR_FILE"
   echo "✅ Pair mode enabled with @$1"
+  
+  # Show commit options and get location preference
+  echo ""
+  echo "📝 Commit Options:"
+  echo "----------------"
+  echo "1. Regular commit (git commit):"
+  echo "   - Pair info appears in commit body"
+  echo "   - Example: git commit -m \"your message\""
+  echo ""
+  echo "2. Title-line commit (git pair-commit):"
+  echo "   - Pair info appears in commit title"
+  echo "   - Example: git pair-commit -m \"your message\""
+  echo ""
+  read -p "Where to show pair info by default? [title/body] (default: title): " location
+  location=${location:-title}
+  set_location "$location"
+  
+  echo ""
+  echo "✅ Pair mode is now active!"
+  echo "   Use 'git pair status' to check current settings"
+  echo "   Use 'git pair --off' to disable pair mode"
+  exit 0
 }
 
 function disable_pair_mode() {
@@ -146,27 +168,6 @@ function interactive_mode() {
   fi
   
   enable_pair_mode "$username"
-  
-  echo ""
-  echo "📝 Commit Options:"
-  echo "----------------"
-  echo "1. Regular commit (git commit):"
-  echo "   - Pair info appears in commit body"
-  echo "   - Example: git commit -m \"your message\""
-  echo ""
-  echo "2. Title-line commit (git pair-commit):"
-  echo "   - Pair info appears in commit title"
-  echo "   - Example: git pair-commit -m \"your message\""
-  echo ""
-  read -p "Where to show pair info by default? [title/body] (default: title): " location
-  location=${location:-title}
-  set_location "$location"
-  
-  echo ""
-  echo "✅ Pair mode is now active!"
-  echo "   Use 'git pair status' to check current settings"
-  echo "   Use 'git pair --off' to disable pair mode"
-  exit 0
 }
 
 # Parse arguments
