@@ -105,6 +105,7 @@ function disable_pair_mode() {
   rm -f "$PAIR_FILE"
   rm -f "$LOCATION_FILE"
   echo "✅ Pair mode disabled"
+  exit 0
 }
 
 function set_location() {
@@ -165,6 +166,7 @@ function interactive_mode() {
   echo "✅ Pair mode is now active!"
   echo "   Use 'git pair status' to check current settings"
   echo "   Use 'git pair --off' to disable pair mode"
+  exit 0
 }
 
 # Parse arguments
