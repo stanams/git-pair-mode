@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Git Pair Mode - Test Suite
+# Copyright (c) 2025 @stanams
+# Licensed under the MIT License. See LICENSE file for details.
 
 # Test script for git-pair functionality
 # Run with: ./test-git-pair.sh

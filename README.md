@@ -175,4 +175,8 @@ If GitHub username verification fails:
 2. Check your internet connection
 3. Verify the GitHub username exists
 
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ---

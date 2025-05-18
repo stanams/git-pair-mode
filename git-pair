@@ -1,6 +1,8 @@
 #!/bin/bash
-
+#
 # Git Pair Mode - A tool to annotate Git commits with pair programming metadata
+# Copyright (c) 2025 @stanams
+# Licensed under the MIT License. See LICENSE file for details.
 
 # Configuration
 PAIR_FILE=".git/.pair"
