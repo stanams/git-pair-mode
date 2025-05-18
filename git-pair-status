@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PAIR_FILE=".git/.pair"
+LOCATION_FILE=".git/.pair_location"
+
+# Check if we're in a git repository
+if [ ! -d ".git" ]; then
+  echo "Error: Not a git repository"
+  exit 1
+fi
+
+# Check if pair mode is active
+if [ -f "$PAIR_FILE" ]; then
+  PAIRER=$(cat "$PAIR_FILE")
+  
+  # Read the location preference (default to title if not set)
+  LOCATION="title"
+  if [ -f "$LOCATION_FILE" ]; then
+    LOCATION=$(cat "$LOCATION_FILE")
+  fi
+  
+  echo "✅ Pair mode is ON"
+  echo "   Paired with: @$PAIRER"
+  echo "   Pair info location: $LOCATION"
+else
+  echo "❌ Pair mode is OFF"
+fi 

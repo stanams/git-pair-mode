@@ -36,7 +36,7 @@ chmod +x install.sh
 4. **Make the scripts executable:**
 
 ```bash
-chmod +x git-pair git-pair-commit
+chmod +x git-pair git-pair-commit git-pair-status
 ```
 
 5. **Enable pairing mode:**
@@ -49,7 +49,14 @@ git pair --with username
 git pair --with username --location body
 ```
 
-6. **Commit as usual (default behavior):**
+6. **Check pair mode status:**
+
+```bash
+git pair-status
+# => Shows if pair mode is on/off and current settings
+```
+
+7. **Commit as usual (default behavior):**
 
 ```bash
 git commit -m "refactor: fix issue with auth"
@@ -59,14 +66,14 @@ git commit -m "refactor: fix issue with auth"
 # (paired with @username)
 ```
 
-7. **Commit with pair info in title:**
+8. **Commit with pair info in title:**
 
 ```bash
 git pair-commit -m "refactor: fix issue with auth"
 # => message becomes: refactor: fix issue with auth (paired with @username)
 ```
 
-8. **Disable pairing mode:**
+9. **Disable pairing mode:**
 
 ```bash
 git pair --off
@@ -79,13 +86,14 @@ To use `git pair` and `git pair-commit` just like native Git commands:
 1. **Move the scripts to a folder in your PATH:**
 
 ```bash
-sudo mv git-pair git-pair-commit /usr/local/bin/
+sudo mv git-pair git-pair-commit git-pair-status /usr/local/bin/
 ```
 
 2. **Use them like this:**
 
 ```bash
 git pair --with your_username
+git pair-status  # check current status
 git pair-commit -m "your commit message"
 ```
 
@@ -108,6 +116,7 @@ git pair-commit -m "your commit message"
 
 - `git-pair`: the CLI script
 - `git-pair-commit`: Git subcommand for title-line pair info
+- `git-pair-status`: Git subcommand to check pair mode status
 - `hooks/prepare-commit-msg`: Git hook
 - `install.sh`: helper to install hook
 
