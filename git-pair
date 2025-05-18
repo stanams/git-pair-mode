@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# File: git-pair
+# Description: CLI tool to toggle Git pair programming mode
+
+PAIR_FILE=".git/.pair"
+
+if [[ $1 == "--off" ]]; then
+  rm -f "$PAIR_FILE"
+  echo "Pair mode disabled."
+elif [[ $1 == "--with" && -n $2 ]]; then
+  echo "$2" > "$PAIR_FILE"
+  echo "Pairing with @$2 enabled."
+elif [[ $1 == "--status" ]]; then
+  if [ -f "$PAIR_FILE" ]; then
+    echo "Currently pairing with @$(cat $PAIR_FILE)"
+  else
+    echo "Pair mode is currently OFF."
+  fi
+else
+  echo "Usage: git pair --with username | --off | --status"
+fi

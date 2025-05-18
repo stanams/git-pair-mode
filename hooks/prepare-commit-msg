@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Git Hook: prepare-commit-msg
+# Purpose: Automatically append pair info to commit messages if pair mode is active
+
+PAIR_FILE=".git/.pair"
+
+if [ -f "$PAIR_FILE" ]; then
+  PAIRER=$(cat "$PAIR_FILE")
+  echo "" >> "$1"
+  echo "(paired with @$PAIRER)" >> "$1"
+fi
