@@ -85,6 +85,12 @@ git pair-commit -m "your message"
 # => your message (paired with @username)
 ```
 
+> **Note:** Why we can't replace `git commit` itself to directly append "(paired with @username)" to the commit's title:
+>
+> Git's built-in sub-commands always take precedence over aliases or external helpers that share the same name. Because `commit` is one of those built-ins, Git will never execute a custom `git-commit` script, nor accept an alias that shadows it. Hooks can only edit the message after Git has created the commit (and they can't remove the blank line that separates title and body), so they can't force the pair info onto the same line either.
+>
+> Check this [Stack Overflow thread](https://stackoverflow.com/questions/3538774/is-it-possible-to-override-git-command-by-git-alias) for more details.
+
 ## 🧪 Example Workflow
 
 1. **Start a pairing session:**

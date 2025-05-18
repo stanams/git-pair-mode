@@ -44,13 +44,19 @@ verify_github_username() {
     
     # Check if curl is available
     if ! command -v curl &> /dev/null; then
-        echo -e "${RED}Error: curl is required for GitHub username verification${NC}"
+        echo -e "${RED}❌ Error: curl is required for GitHub username verification${NC}"
         return 1
     fi
     
     # Check if username exists on GitHub
-    if curl -s "https://api.github.com/users/$username" | grep -q '"message":"Not Found"'; then
-        echo -e "${RED}Error: GitHub username '$username' does not exist${NC}"
+    local response
+    response=$(curl -s -o /dev/null -w "%{http_code}" "https://api.github.com/users/$username")
+    
+    if [ "$response" = "404" ]; then
+        echo -e "${RED}❌ Error: GitHub username '$username' does not exist${NC}"
+        return 1
+    elif [ "$response" != "200" ]; then
+        echo -e "${RED}❌ Error: Could not verify GitHub username (HTTP $response)${NC}"
         return 1
     fi
     
@@ -77,28 +83,28 @@ show_stats() {
             period_text="this month"
             ;;
         *)
-            echo -e "${RED}Invalid period. Use: day, week, or month${NC}"
+            echo -e "${RED}❌ Invalid period. Use: day, week, or month${NC}"
             return 1
             ;;
     esac
     
-    echo -e "${BLUE}Pair Programming Statistics ($period_text)${NC}"
+    echo -e "${BLUE}📊 Pair Programming Statistics ($period_text)${NC}"
     echo -e "${BLUE}----------------------------------------${NC}"
     
     # Get commit stats
     local total_commits=$(git log --since="$start_date" --pretty=format:"%H" | wc -l | tr -d ' ')
     local paired_commits=$(git log --since="$start_date" --grep="(paired with @" --pretty=format:"%H" | wc -l | tr -d ' ')
     
-    echo -e "Total commits: ${GREEN}$total_commits${NC}"
-    echo -e "Paired commits: ${GREEN}$paired_commits${NC}"
+    echo -e "📝 Total commits: ${GREEN}$total_commits${NC}"
+    echo -e "👥 Paired commits: ${GREEN}$paired_commits${NC}"
     
     if [ $total_commits -gt 0 ]; then
         local pair_percentage=$((paired_commits * 100 / total_commits))
-        echo -e "Pair percentage: ${GREEN}$pair_percentage%${NC}"
+        echo -e "📈 Pair percentage: ${GREEN}$pair_percentage%${NC}"
     fi
     
     # Show pairing partners
-    echo -e "\n${BLUE}Pairing Partners:${NC}"
+    echo -e "\n${BLUE}🤝 Pairing Partners:${NC}"
     git log --since="$start_date" --grep="(paired with @" --pretty=format:"%s" | \
         grep -o "@[a-zA-Z0-9-]*" | sort | uniq -c | sort -nr | \
         while read count username; do
@@ -112,7 +118,7 @@ enable_pair_mode() {
     
     # Verify GitHub username
     if ! verify_github_username "$username"; then
-        echo -e "${RED}Please run the command again with a valid GitHub username${NC}"
+        echo -e "${RED}❌ Please run the command again with a valid GitHub username${NC}"
         return 1
     fi
     
@@ -129,8 +135,8 @@ enable_pair_mode() {
         chmod +x "$HOOK_PATH"
     fi
     
-    echo -e "${GREEN}Pair mode enabled with @$username${NC}"
-    echo -e "${BLUE}Available commit commands:${NC}"
+    echo -e "${GREEN}✅ Pair mode enabled with @$username${NC}"
+    echo -e "${BLUE}📝 Available commit commands:${NC}"
     echo "git commit -m \"msg\"     # Add pair info to commit body"
     echo "git pair-commit -m \"msg\" # Add pair info to commit title"
 }
@@ -138,9 +144,10 @@ enable_pair_mode() {
 # Function to show current status
 show_status() {
     if [ ! -f "$PAIR_FILE" ]; then
-        echo -e "${YELLOW}Pair mode is OFF${NC}"
-        echo -e "${BLUE}Would you like to activate pair mode? (y/n)${NC}"
-        read -r response
+        echo -e "${YELLOW}🔴 Pair mode is OFF${NC}"
+        echo -e "${BLUE}Would you like to activate pair mode? (y/n, press Enter for no)${NC}"
+        read -n1 -s response
+        echo  # Add a newline after the single character input
         if [[ "$response" =~ ^[Yy]$ ]]; then
             interactive_mode
         fi
@@ -149,27 +156,27 @@ show_status() {
     
     local pairer=$(grep "^pairer=" "$PAIR_FILE" | cut -d'=' -f2)
     
-    echo -e "${GREEN}Pair mode is ON${NC}"
-    echo -e "Pairing with: ${GREEN}@$pairer${NC}"
+    echo -e "${GREEN}🟢 Pair mode is ON${NC}"
+    echo -e "👥 Pairing with: ${GREEN}@$pairer${NC}"
     echo
-    echo -e "${BLUE}Available commands:${NC}"
+    echo -e "${BLUE}📋 Available commands:${NC}"
     echo "git pair --off          # Disable pair mode"
     echo "git pair stats         # Show today's stats"
     echo "git pair stats week    # Show this week's stats"
     echo "git pair stats month   # Show this month's stats"
     echo
-    echo -e "${BLUE}Available commit commands:${NC}"
+    echo -e "${BLUE}📝 Available commit commands:${NC}"
     echo "git commit -m \"msg\"     # Add pair info to commit body"
     echo "git pair-commit -m \"msg\" # Add pair info to commit title"
 }
 
 # Function to handle interactive mode
 interactive_mode() {
-    echo -e "${BLUE}Enter GitHub username:${NC}"
+    echo -e "${BLUE}👤 Enter GitHub username:${NC}"
     read -r username
     
     if [ -z "$username" ]; then
-        echo -e "${RED}Username cannot be empty${NC}"
+        echo -e "${RED}❌ Username cannot be empty${NC}"
         return 1
     fi
     
@@ -180,7 +187,7 @@ interactive_mode() {
 case "$1" in
     --with)
         if [ -z "$2" ]; then
-            echo -e "${RED}Error: Please provide a GitHub username${NC}"
+            echo -e "${RED}❌ Error: Please provide a GitHub username${NC}"
             show_usage
             exit 1
         fi
@@ -189,9 +196,9 @@ case "$1" in
     --off)
         if [ -f "$PAIR_FILE" ]; then
             rm "$PAIR_FILE"
-            echo -e "${GREEN}Pair mode disabled${NC}"
+            echo -e "${GREEN}✅ Pair mode disabled${NC}"
         else
-            echo -e "${YELLOW}Pair mode is already off${NC}"
+            echo -e "${YELLOW}ℹ️  Pair mode is already off${NC}"
         fi
         ;;
     status)
