@@ -12,8 +12,6 @@ A lightweight tool to annotate Git commits with pair programming metadata — no
 
 ## 🚀 Installation
 
-To use the tool, you have two options: run it as a script locally, or make it available globally as a `git pair` command.
-
 1. **Clone this repo:**
 
 ```bash
@@ -21,103 +19,112 @@ git clone https://github.com/stanams/git-pair-mode.git
 cd git-pair-mode
 ```
 
-2. **Make the install script executable:**
+2. **Make the scripts executable:**
+
+```bash
+chmod +x git-pair git-pair-commit
+```
+
+3. **Install globally (recommended):**
+
+```bash
+sudo mv git-pair git-pair-commit /usr/local/bin/
+```
+
+4. **Install the Git hook:**
 
 ```bash
 chmod +x install.sh
-```
-
-3. **Install the Git hook:**
-
-```bash
 ./install.sh
 ```
 
-4. **Make the scripts executable:**
+## 📝 Usage
+
+### Basic Commands
 
 ```bash
-chmod +x git-pair git-pair-commit git-pair-status
-```
+# Enable pair mode (interactive)
+git pair
 
-5. **Enable pairing mode:**
-
-```bash
-# Basic usage (pair info in title)
+# Enable pair mode with specific user
 git pair --with username
 
-# With pair info in commit body
-git pair --with username --location body
+# Check pair mode status
+git pair status
+
+# Disable pair mode
+git pair --off
 ```
 
-6. **Check pair mode status:**
+### Commit Options
 
 ```bash
-git pair-status
-# => Shows if pair mode is on/off and current settings
-```
-
-7. **Commit as usual (default behavior):**
-
-```bash
-git commit -m "refactor: fix issue with auth"
-# => message becomes:
-# refactor: fix issue with auth
+# Regular commit (pair info in body)
+git commit -m "your message"
+# => your message
 #
 # (paired with @username)
+
+# Commit with pair info in title
+git pair-commit -m "your message"
+# => your message (paired with @username)
 ```
 
-8. **Commit with pair info in title:**
+### Configuration
 
 ```bash
-git pair-commit -m "refactor: fix issue with auth"
-# => message becomes: refactor: fix issue with auth (paired with @username)
+# Set pair info location to body
+git pair --location body
+
+# Set pair info location to title
+git pair --location title
 ```
 
-9. **Disable pairing mode:**
+## 🧪 Example Workflow
+
+1. **Start a pairing session:**
+
+```bash
+git pair
+# Enter username when prompted
+```
+
+2. **Check status:**
+
+```bash
+git pair status
+# => Shows current pair mode and settings
+```
+
+3. **Make commits:**
+
+```bash
+# Using regular commit
+git commit -m "feat: add new feature"
+
+# Or using pair-commit for title-line pair info
+git pair-commit -m "feat: add new feature"
+```
+
+4. **End pairing session:**
 
 ```bash
 git pair --off
 ```
 
-## 🧪 Using as a Git Subcommand Globally
-
-To use `git pair` and `git pair-commit` just like native Git commands:
-
-1. **Move the scripts to a folder in your PATH:**
-
-```bash
-sudo mv git-pair git-pair-commit git-pair-status /usr/local/bin/
-```
-
-2. **Use them like this:**
-
-```bash
-git pair --with your_username
-git pair-status  # check current status
-git pair-commit -m "your commit message"
-```
-
-> ℹ️ You can check that `/usr/local/bin` is in your path using:
->
-> ```bash
-> echo $PATH
-> ```
-
----
-
-## 🧪 Test locally
-
-```bash
-./git-pair --with alice
-# Then make a commit and inspect the message
-```
-
 ## 📁 Files
 
-- `git-pair`: the CLI script
+- `git-pair`: Main CLI script for managing pair mode
 - `git-pair-commit`: Git subcommand for title-line pair info
-- `git-pair-status`: Git subcommand to check pair mode status
-- `hooks/prepare-commit-msg`: Git hook
-- `install.sh`: helper to install hook
+- `hooks/prepare-commit-msg`: Git hook for commit messages
+- `install.sh`: Helper to install Git hook
+
+## 🔍 Troubleshooting
+
+If commands aren't found:
+
+1. Make sure scripts are executable: `chmod +x git-pair git-pair-commit`
+2. Verify they're in your PATH: `which git-pair`
+3. Check `/usr/local/bin` is in your PATH: `echo $PATH`
 
 ---
