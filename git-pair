@@ -16,26 +16,40 @@ NC='\033[0m' # No Color
 
 # Function to show usage
 show_usage() {
-    echo "Usage: git pair [command]"
+    echo -e "${BLUE}🤖 Git Pair Mode - A tool to annotate Git commits with pair programming metadata${NC}"
     echo
-    echo "Commands:"
-    echo "  --with <username>    Enable pair mode with specific GitHub username"
-    echo "  --off               Disable pair mode"
-    echo "  status              Show current pair mode status"
-    echo "  stats [period]      Show pairing statistics (day/week/month)"
+    echo -e "${BLUE}📋 Basic Commands:${NC}"
+    echo "  git pair              # Interactive mode - prompts for GitHub username"
+    echo "  git pair --with USER  # Enable pair mode with specific GitHub username"
+    echo "  git pair --off        # Disable pair mode"
+    echo "  git pair status       # Show current pair mode status"
+    echo "  git pair stats        # Show today's pairing statistics"
+    echo "  git pair --help       # Show this help message"
     echo
-    echo "Examples:"
-    echo "  git pair            # Interactive mode"
-    echo "  git pair --with john # Enable pair mode with John"
-    echo "  git pair --off      # Disable pair mode"
-    echo "  git pair status     # Check pair mode status"
-    echo "  git pair stats      # Show today's stats"
-    echo "  git pair stats week # Show this week's stats"
-    echo "  git pair stats month # Show this month's stats"
+    echo -e "${BLUE}📊 Statistics Options:${NC}"
+    echo "  git pair stats        # Show today's stats"
+    echo "  git pair stats week   # Show this week's stats"
+    echo "  git pair stats month  # Show this month's stats"
     echo
-    echo "Commit Commands:"
+    echo -e "${BLUE}📝 Commit Commands:${NC}"
     echo "  git commit -m \"msg\"     # Add pair info to commit body"
     echo "  git pair-commit -m \"msg\" # Add pair info to commit title"
+    echo
+    echo -e "${BLUE}❓ Examples:${NC}"
+    echo "  # Start a pairing session"
+    echo "  git pair"
+    echo "  git pair --with john"
+    echo
+    echo "  # Check status and stats"
+    echo "  git pair status"
+    echo "  git pair stats week"
+    echo
+    echo "  # Make commits with pair info"
+    echo "  git commit -m \"feat: add new feature\""
+    echo "  git pair-commit -m \"fix: bug in login\""
+    echo
+    echo "  # End pairing session"
+    echo "  git pair --off"
 }
 
 # Function to verify GitHub username
@@ -200,6 +214,9 @@ case "$1" in
         else
             echo -e "${YELLOW}ℹ️  Pair mode is already off${NC}"
         fi
+        ;;
+    -h|--help|help)
+        show_usage
         ;;
     status)
         show_status
