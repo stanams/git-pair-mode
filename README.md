@@ -7,7 +7,8 @@ A lightweight tool to annotate Git commits with pair programming metadata — no
 - Enable/disable pairing mode in your repo
 - Automatically appends `(paired with @username)` to commit messages
 - Choose where to show pair info (in title or commit body)
-- Git subcommand for title-line pair info
+- GitHub username verification
+- Interactive commit options
 - Uses Git hooks, works locally, no login needed
 
 ## 🚀 Installation
@@ -19,16 +20,16 @@ git clone https://github.com/stanams/git-pair-mode.git
 cd git-pair-mode
 ```
 
-2. **Make the scripts executable:**
+2. **Make the script executable:**
 
 ```bash
-chmod +x git-pair git-pair-commit
+chmod +x git-pair
 ```
 
 3. **Install globally (recommended):**
 
 ```bash
-sudo mv git-pair git-pair-commit /usr/local/bin/
+sudo mv git-pair /usr/local/bin/
 ```
 
 4. **Install the Git hook:**
@@ -45,9 +46,11 @@ chmod +x install.sh
 ```bash
 # Enable pair mode (interactive)
 git pair
+# => Prompts for GitHub username and commit options
 
 # Enable pair mode with specific user
 git pair --with username
+# => Verifies GitHub username and prompts for commit options
 
 # Check pair mode status
 git pair status
@@ -58,16 +61,22 @@ git pair --off
 
 ### Commit Options
 
+When pair mode is on, you can choose if pairing info is on the commit title or body by running one of these 2 commands:
+
+1. **In the commit title:**
+
 ```bash
-# Regular commit (pair info in body)
+git pair-commit -m "your message"
+# => your message (paired with @username)
+```
+
+2. **In the commit body:**
+
+```bash
 git commit -m "your message"
 # => your message
 #
 # (paired with @username)
-
-# Commit with pair info in title
-git pair-commit -m "your message"
-# => your message (paired with @username)
 ```
 
 ### Configuration
@@ -86,7 +95,10 @@ git pair --location title
 
 ```bash
 git pair
-# Enter username when prompted
+# => Prompts for GitHub username
+# => Verifies username exists on GitHub
+# => Asks for commit options
+# => Shows available commands
 ```
 
 2. **Check status:**
@@ -99,11 +111,8 @@ git pair status
 3. **Make commits:**
 
 ```bash
-# Using regular commit
+# The pair info will be added automatically based on your preference
 git commit -m "feat: add new feature"
-
-# Or using pair-commit for title-line pair info
-git pair-commit -m "feat: add new feature"
 ```
 
 4. **End pairing session:**
@@ -115,7 +124,6 @@ git pair --off
 ## 📁 Files
 
 - `git-pair`: Main CLI script for managing pair mode
-- `git-pair-commit`: Git subcommand for title-line pair info
 - `hooks/prepare-commit-msg`: Git hook for commit messages
 - `install.sh`: Helper to install Git hook
 
@@ -123,8 +131,14 @@ git pair --off
 
 If commands aren't found:
 
-1. Make sure scripts are executable: `chmod +x git-pair git-pair-commit`
-2. Verify they're in your PATH: `which git-pair`
+1. Make sure script is executable: `chmod +x git-pair`
+2. Verify it's in your PATH: `which git-pair`
 3. Check `/usr/local/bin` is in your PATH: `echo $PATH`
+
+If GitHub username verification fails:
+
+1. Ensure you have `curl` installed
+2. Check your internet connection
+3. Verify the GitHub username exists
 
 ---

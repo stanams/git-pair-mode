@@ -64,6 +64,17 @@ function show_status() {
     echo "   Pair info location: $LOCATION"
   else
     echo "❌ Pair mode is OFF"
+    echo -n "Would you like to activate it? (y/n) [y]: "
+    read -n1 response
+    echo  # Add a newline after the single character input
+    response=${response:-y}
+    
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      interactive_mode
+    else
+      echo "Pair mode remains OFF"
+      exit 0
+    fi
   fi
 }
 
