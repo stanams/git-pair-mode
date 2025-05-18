@@ -7,6 +7,7 @@ A lightweight tool to annotate Git commits with pair programming metadata — no
 - Enable/disable pairing mode in your repo
 - Automatically appends `(paired with @username)` to commit messages
 - Choose where to show pair info (in title or commit body)
+- Git subcommand for title-line pair info
 - Uses Git hooks, works locally, no login needed
 
 ## 🚀 Installation
@@ -32,7 +33,13 @@ chmod +x install.sh
 ./install.sh
 ```
 
-4. **Enable pairing mode:**
+4. **Make the scripts executable:**
+
+```bash
+chmod +x git-pair git-pair-commit
+```
+
+5. **Enable pairing mode:**
 
 ```bash
 # Basic usage (pair info in title)
@@ -42,7 +49,7 @@ git pair --with username
 git pair --with username --location body
 ```
 
-5. **Commit as usual (default behavior):**
+6. **Commit as usual (default behavior):**
 
 ```bash
 git commit -m "refactor: fix issue with auth"
@@ -52,15 +59,14 @@ git commit -m "refactor: fix issue with auth"
 # (paired with @username)
 ```
 
-6. **[Optional] Commit with pair info on the same line as the title:**
+7. **Commit with pair info in title:**
 
 ```bash
-./git-pair-commit -m "refactor: fix issue with auth"
+git pair-commit -m "refactor: fix issue with auth"
 # => message becomes: refactor: fix issue with auth (paired with @username)
-# Note: The pair info is only in the title, not duplicated in the body.
 ```
 
-7. **Disable pairing mode:**
+8. **Disable pairing mode:**
 
 ```bash
 git pair --off
@@ -68,25 +74,19 @@ git pair --off
 
 ## 🧪 Using as a Git Subcommand Globally
 
-To use `git pair` just like native Git commands:
+To use `git pair` and `git pair-commit` just like native Git commands:
 
-1. **Make the script executable:**
-
-```bash
-chmod +x git-pair
-```
-
-2. **Move it to a folder in your PATH:**
+1. **Move the scripts to a folder in your PATH:**
 
 ```bash
-sudo mv git-pair /usr/local/bin/git-pair
+sudo mv git-pair git-pair-commit /usr/local/bin/
 ```
 
-3. **Use it like this:**
+2. **Use them like this:**
 
 ```bash
 git pair --with your_username
-git pair --with your_username --location body
+git pair-commit -m "your commit message"
 ```
 
 > ℹ️ You can check that `/usr/local/bin` is in your path using:
@@ -107,7 +107,7 @@ git pair --with your_username --location body
 ## 📁 Files
 
 - `git-pair`: the CLI script
-- `git-pair-commit`: optional commit wrapper for pair info in title
+- `git-pair-commit`: Git subcommand for title-line pair info
 - `hooks/prepare-commit-msg`: Git hook
 - `install.sh`: helper to install hook
 

@@ -1,8 +1,17 @@
 #!/bin/bash
 # git-pair-commit: Commit with pair info appended to the title line
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PAIR_FILE=".git/.pair"
 
+# Check if we're in a git repository
+if [ ! -d ".git" ]; then
+  echo "Error: Not a git repository"
+  exit 1
+fi
+
+# Check if pair mode is active
 if [ ! -f "$PAIR_FILE" ]; then
   echo "Pair mode is not enabled. Use 'git pair --with username' first."
   exit 1
@@ -11,7 +20,7 @@ fi
 PAIRER=$(cat "$PAIR_FILE")
 PAIR_INFO="(paired with @$PAIRER)"
 
-# Parse -m argument
+# Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
     -m|--message)
