@@ -6,9 +6,10 @@ A lightweight tool to annotate Git commits with pair programming metadata — no
 
 - Enable/disable pairing mode in your repo
 - Automatically appends `(paired with @username)` to commit messages
-- Choose where to show pair info (in title or commit body)
+- Choose between title or body placement using different commit commands
 - GitHub username verification
 - Interactive commit options
+- Pair programming statistics (works even when pair mode is off)
 - Uses Git hooks, works locally, no login needed
 
 ## 🚀 Installation
@@ -46,31 +47,29 @@ chmod +x install.sh
 ```bash
 # Enable pair mode (interactive)
 git pair
-# => Prompts for GitHub username and commit options
+# => Prompts for GitHub username and shows available commands
 
 # Enable pair mode with specific user
 git pair --with username
-# => Verifies GitHub username and prompts for commit options
+# => Verifies GitHub username and shows available commands
 
 # Check pair mode status
 git pair status
+
+# Show pairing statistics (works even when pair mode is off)
+git pair stats        # Show today's stats
+git pair stats week   # Show this week's stats
+git pair stats month  # Show this month's stats
 
 # Disable pair mode
 git pair --off
 ```
 
-### Commit Options
+### Commit Commands
 
-When pair mode is on, you can choose if pairing info is on the commit title or body by running one of these 2 commands:
+When pair mode is on, you have two options for adding pair info to your commits:
 
-1. **In the commit title:**
-
-```bash
-git pair-commit -m "your message"
-# => your message (paired with @username)
-```
-
-2. **In the commit body:**
+1. **In the commit body (default):**
 
 ```bash
 git commit -m "your message"
@@ -79,14 +78,11 @@ git commit -m "your message"
 # (paired with @username)
 ```
 
-### Configuration
+2. **In the commit title:**
 
 ```bash
-# Set pair info location to body
-git pair --location body
-
-# Set pair info location to title
-git pair --location title
+git pair-commit -m "your message"
+# => your message (paired with @username)
 ```
 
 ## 🧪 Example Workflow
@@ -97,7 +93,6 @@ git pair --location title
 git pair
 # => Prompts for GitHub username
 # => Verifies username exists on GitHub
-# => Asks for commit options
 # => Shows available commands
 ```
 
@@ -111,11 +106,25 @@ git pair status
 3. **Make commits:**
 
 ```bash
-# The pair info will be added automatically based on your preference
+# Add pair info to commit body
 git commit -m "feat: add new feature"
+
+# Or add pair info to commit title
+git pair-commit -m "feat: add new feature"
 ```
 
-4. **End pairing session:**
+4. **View statistics:**
+
+```bash
+git pair stats
+# => Shows today's pairing statistics:
+#    - Total commits
+#    - Paired commits
+#    - Pair percentage
+#    - List of pairing partners
+```
+
+5. **End pairing session:**
 
 ```bash
 git pair --off

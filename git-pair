@@ -2,217 +2,209 @@
 
 # Git Pair Mode - A tool to annotate Git commits with pair programming metadata
 
+# Configuration
 PAIR_FILE=".git/.pair"
-LOCATION_FILE=".git/.pair_location"
+HOOK_PATH=".git/hooks/prepare-commit-msg"
+HOOK_SCRIPT="$(pwd)/hooks/prepare-commit-msg"
 
-function show_help() {
-  echo "Usage: git pair [OPTIONS]"
-  echo ""
-  echo "Options:"
-  echo "  --with USERNAME    Enable pair mode with specified username"
-  echo "  --off             Disable pair mode"
-  echo "  --location WHERE  Set where to show pair info (title/body)"
-  echo "  status            Show current pair mode status"
-  echo "  --help            Show this help message"
-  echo ""
-  echo "Examples:"
-  echo "  git pair --with alice"
-  echo "  git pair --with alice --location body"
-  echo "  git pair --off"
-  echo "  git pair status"
-  echo ""
-  echo "Note: Running 'git pair' without arguments will prompt for the username"
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to show usage
+show_usage() {
+    echo "Usage: git pair [command]"
+    echo
+    echo "Commands:"
+    echo "  --with <username>    Enable pair mode with specific GitHub username"
+    echo "  --off               Disable pair mode"
+    echo "  status              Show current pair mode status"
+    echo "  stats [period]      Show pairing statistics (day/week/month)"
+    echo
+    echo "Examples:"
+    echo "  git pair            # Interactive mode"
+    echo "  git pair --with john # Enable pair mode with John"
+    echo "  git pair --off      # Disable pair mode"
+    echo "  git pair status     # Check pair mode status"
+    echo "  git pair stats      # Show today's stats"
+    echo "  git pair stats week # Show this week's stats"
+    echo "  git pair stats month # Show this month's stats"
+    echo
+    echo "Commit Commands:"
+    echo "  git commit -m \"msg\"     # Add pair info to commit body"
+    echo "  git pair-commit -m \"msg\" # Add pair info to commit title"
 }
 
-function verify_github_username() {
-  local username=$1
-  local response
-  
-  # Check if curl is available
-  if ! command -v curl &> /dev/null; then
-    echo "❌ curl is required to verify GitHub usernames"
-    return 1
-  fi
-  
-  # Make API request to GitHub
-  response=$(curl -s -o /dev/null -w "%{http_code}" "https://api.github.com/users/$username")
-  
-  if [ "$response" = "200" ]; then
+# Function to verify GitHub username
+verify_github_username() {
+    local username=$1
+    
+    # Check if curl is available
+    if ! command -v curl &> /dev/null; then
+        echo -e "${RED}Error: curl is required for GitHub username verification${NC}"
+        return 1
+    fi
+    
+    # Check if username exists on GitHub
+    if curl -s "https://api.github.com/users/$username" | grep -q '"message":"Not Found"'; then
+        echo -e "${RED}Error: GitHub username '$username' does not exist${NC}"
+        return 1
+    fi
+    
     return 0
-  else
-    return 1
-  fi
 }
 
-function show_status() {
-  if [ ! -d ".git" ]; then
-    echo "Error: Not a git repository"
-    exit 1
-  fi
-
-  if [ -f "$PAIR_FILE" ]; then
-    PAIRER=$(cat "$PAIR_FILE")
+# Function to show pairing statistics
+show_stats() {
+    local period=${1:-day}  # Default to day if no period specified
     
-    # Read the location preference (default to title if not set)
-    LOCATION="title"
-    if [ -f "$LOCATION_FILE" ]; then
-      LOCATION=$(cat "$LOCATION_FILE")
+    # Get date range based on period
+    local start_date
+    case $period in
+        day)
+            start_date=$(date -v-1d +%Y-%m-%d)
+            period_text="today"
+            ;;
+        week)
+            start_date=$(date -v-7d +%Y-%m-%d)
+            period_text="this week"
+            ;;
+        month)
+            start_date=$(date -v-1m +%Y-%m-%d)
+            period_text="this month"
+            ;;
+        *)
+            echo -e "${RED}Invalid period. Use: day, week, or month${NC}"
+            return 1
+            ;;
+    esac
+    
+    echo -e "${BLUE}Pair Programming Statistics ($period_text)${NC}"
+    echo -e "${BLUE}----------------------------------------${NC}"
+    
+    # Get commit stats
+    local total_commits=$(git log --since="$start_date" --pretty=format:"%H" | wc -l | tr -d ' ')
+    local paired_commits=$(git log --since="$start_date" --grep="(paired with @" --pretty=format:"%H" | wc -l | tr -d ' ')
+    
+    echo -e "Total commits: ${GREEN}$total_commits${NC}"
+    echo -e "Paired commits: ${GREEN}$paired_commits${NC}"
+    
+    if [ $total_commits -gt 0 ]; then
+        local pair_percentage=$((paired_commits * 100 / total_commits))
+        echo -e "Pair percentage: ${GREEN}$pair_percentage%${NC}"
     fi
     
-    echo "✅ Pair mode is ON"
-    echo "   Paired with: @$PAIRER"
-    echo "   Pair info location: $LOCATION"
-  else
-    echo "❌ Pair mode is OFF"
-    echo -n "Would you like to activate it? (y/n) [y]: "
-    read -n1 response
-    echo  # Add a newline after the single character input
-    response=${response:-y}
+    # Show pairing partners
+    echo -e "\n${BLUE}Pairing Partners:${NC}"
+    git log --since="$start_date" --grep="(paired with @" --pretty=format:"%s" | \
+        grep -o "@[a-zA-Z0-9-]*" | sort | uniq -c | sort -nr | \
+        while read count username; do
+            echo -e "${GREEN}$count${NC} commits with $username"
+        done
+}
+
+# Function to enable pair mode
+enable_pair_mode() {
+    local username=$1
     
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-      interactive_mode
-    else
-      echo "Pair mode remains OFF"
-      exit 0
+    # Verify GitHub username
+    if ! verify_github_username "$username"; then
+        echo -e "${RED}Please run the command again with a valid GitHub username${NC}"
+        return 1
     fi
-  fi
-}
-
-function enable_pair_mode() {
-  if [ -z "$1" ]; then
-    echo "Error: Please provide a username"
-    show_help
-    exit 1
-  fi
-
-  # Verify GitHub username
-  if ! verify_github_username "$1"; then
-    echo "❌ Invalid GitHub username: @$1"
-    echo "   Please run the command again with a valid GitHub username"
-    exit 1
-  fi
-
-  echo "$1" > "$PAIR_FILE"
-  echo "✅ Pair mode enabled with @$1"
-  
-  # Show commit options and get location preference
-  echo ""
-  echo "📝 Commit Options:"
-  echo "----------------"
-  echo "1. Regular commit (git commit):"
-  echo "   - Pair info appears in commit body"
-  echo "   - Example: git commit -m \"your message\""
-  echo ""
-  echo "2. Title-line commit (git pair-commit):"
-  echo "   - Pair info appears in commit title"
-  echo "   - Example: git pair-commit -m \"your message\""
-  echo ""
-  read -p "Where to show pair info by default? [title/body] (default: title): " location
-  location=${location:-title}
-  set_location "$location"
-  
-  echo ""
-  echo "✅ Pair mode is now active!"
-  echo "   Use 'git pair status' to check current settings"
-  echo "   Use 'git pair --off' to disable pair mode"
-  exit 0
-}
-
-function disable_pair_mode() {
-  if [ ! -f "$PAIR_FILE" ]; then
-    echo "❌ Pair mode is already OFF"
-    echo -n "Would you like to activate it? (y/n) [y]: "
-    read -n1 response
-    echo  # Add a newline after the single character input
-    response=${response:-y}
     
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-      interactive_mode
-    else
-      echo "Pair mode remains OFF"
-      exit 0
+    # Create .git directory if it doesn't exist
+    mkdir -p .git
+    
+    # Save pair info
+    echo "pairer=$username" > "$PAIR_FILE"
+    
+    # Install hook if not already installed
+    if [ ! -f "$HOOK_PATH" ]; then
+        mkdir -p .git/hooks
+        cp "$HOOK_SCRIPT" "$HOOK_PATH"
+        chmod +x "$HOOK_PATH"
     fi
-    return
-  fi
-  
-  rm -f "$PAIR_FILE"
-  rm -f "$LOCATION_FILE"
-  echo "✅ Pair mode disabled"
-  exit 0
+    
+    echo -e "${GREEN}Pair mode enabled with @$username${NC}"
+    echo -e "${BLUE}Available commit commands:${NC}"
+    echo "git commit -m \"msg\"     # Add pair info to commit body"
+    echo "git pair-commit -m \"msg\" # Add pair info to commit title"
 }
 
-function set_location() {
-  if [ -z "$1" ]; then
-    echo "Error: Please specify location (title/body)"
-    show_help
-    exit 1
-  fi
-  
-  if [ "$1" != "title" ] && [ "$1" != "body" ]; then
-    echo "Error: Location must be either 'title' or 'body'"
-    show_help
-    exit 1
-  fi
-  
-  echo "$1" > "$LOCATION_FILE"
-  echo "✅ Pair info will be shown in the $1"
+# Function to show current status
+show_status() {
+    if [ ! -f "$PAIR_FILE" ]; then
+        echo -e "${YELLOW}Pair mode is OFF${NC}"
+        echo -e "${BLUE}Would you like to activate pair mode? (y/n)${NC}"
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            interactive_mode
+        fi
+        return
+    fi
+    
+    local pairer=$(grep "^pairer=" "$PAIR_FILE" | cut -d'=' -f2)
+    
+    echo -e "${GREEN}Pair mode is ON${NC}"
+    echo -e "Pairing with: ${GREEN}@$pairer${NC}"
+    echo
+    echo -e "${BLUE}Available commands:${NC}"
+    echo "git pair --off          # Disable pair mode"
+    echo "git pair stats         # Show today's stats"
+    echo "git pair stats week    # Show this week's stats"
+    echo "git pair stats month   # Show this month's stats"
+    echo
+    echo -e "${BLUE}Available commit commands:${NC}"
+    echo "git commit -m \"msg\"     # Add pair info to commit body"
+    echo "git pair-commit -m \"msg\" # Add pair info to commit title"
 }
 
-function interactive_mode() {
-  echo "🤝 Git Pair Mode"
-  echo "----------------"
-  read -p "Enter GitHub username to pair with (without @): " username
-  
-  # Remove @ if user included it
-  username=${username#@}
-  
-  if [ -z "$username" ]; then
-    echo "❌ No username provided"
-    exit 1
-  fi
-
-  # Verify GitHub username
-  if ! verify_github_username "$username"; then
-    echo "❌ Invalid GitHub username: @$username"
-    echo "   Please run 'git pair' again with a valid GitHub username"
-    exit 1
-  fi
-  
-  enable_pair_mode "$username"
+# Function to handle interactive mode
+interactive_mode() {
+    echo -e "${BLUE}Enter GitHub username:${NC}"
+    read -r username
+    
+    if [ -z "$username" ]; then
+        echo -e "${RED}Username cannot be empty${NC}"
+        return 1
+    fi
+    
+    enable_pair_mode "$username"
 }
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-  case $1 in
+# Main script logic
+case "$1" in
     --with)
-      enable_pair_mode "$2"
-      shift 2
-      ;;
+        if [ -z "$2" ]; then
+            echo -e "${RED}Error: Please provide a GitHub username${NC}"
+            show_usage
+            exit 1
+        fi
+        enable_pair_mode "$2"
+        ;;
     --off)
-      disable_pair_mode
-      shift
-      ;;
-    --location)
-      set_location "$2"
-      shift 2
-      ;;
+        if [ -f "$PAIR_FILE" ]; then
+            rm "$PAIR_FILE"
+            echo -e "${GREEN}Pair mode disabled${NC}"
+        else
+            echo -e "${YELLOW}Pair mode is already off${NC}"
+        fi
+        ;;
     status)
-      show_status
-      exit 0
-      ;;
-    --help)
-      show_help
-      exit 0
-      ;;
+        show_status
+        ;;
+    stats)
+        show_stats "$2"
+        ;;
     *)
-      echo "Unknown option: $1"
-      show_help
-      exit 1
-      ;;
-  esac
-done
-
-# If no arguments provided, enter interactive mode
-if [ $# -eq 0 ]; then
-  interactive_mode
-fi 
+        if [ -z "$1" ]; then
+            interactive_mode
+        else
+            show_usage
+        fi
+        ;;
+esac 
