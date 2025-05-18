@@ -141,6 +141,25 @@ git pair --off
 - `git-pair`: Main CLI script for managing pair mode
 - `hooks/prepare-commit-msg`: Git hook for commit messages
 - `install.sh`: Helper to install Git hook
+- `tests/`: Directory containing test scripts and documentation
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite to ensure all features work correctly. The tests cover:
+
+- GitHub username verification
+- Pair mode commands (enable/disable/status)
+- Commit commands (regular and pair-commit)
+- Statistics functionality
+
+To run the tests:
+
+```bash
+chmod +x tests/test-git-pair.sh
+./tests/test-git-pair.sh
+```
+
+For more details about the test suite, see the [tests README](tests/README.md).
 
 ## 🔍 Troubleshooting
 
@@ -157,5 +176,3 @@ If GitHub username verification fails:
 3. Verify the GitHub username exists
 
 ---
-
-mkdir -p tests
