@@ -14,6 +14,16 @@ A lightweight tool to annotate Git commits with pair programming metadata — no
 
 ## 🚀 Installation
 
+### 🍺 Homebrew Installation
+
+```bash
+# Install Git Pair Mode via Homebrew
+brew tap stanams/tap
+brew install git-pair-mode
+```
+
+### Manual installation
+
 1. **Clone this repo:**
 
 ```bash
