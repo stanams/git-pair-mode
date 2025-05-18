@@ -1,0 +1,204 @@
+#!/bin/bash
+
+# Git Pair Mode - A tool to annotate Git commits with pair programming metadata
+
+PAIR_FILE=".git/.pair"
+LOCATION_FILE=".git/.pair_location"
+
+function show_help() {
+  echo "Usage: git pair [OPTIONS]"
+  echo ""
+  echo "Options:"
+  echo "  --with USERNAME    Enable pair mode with specified username"
+  echo "  --off             Disable pair mode"
+  echo "  --location WHERE  Set where to show pair info (title/body)"
+  echo "  status            Show current pair mode status"
+  echo "  --help            Show this help message"
+  echo ""
+  echo "Examples:"
+  echo "  git pair --with alice"
+  echo "  git pair --with alice --location body"
+  echo "  git pair --off"
+  echo "  git pair status"
+  echo ""
+  echo "Note: Running 'git pair' without arguments will prompt for the username"
+}
+
+function verify_github_username() {
+  local username=$1
+  local response
+  
+  # Check if curl is available
+  if ! command -v curl &> /dev/null; then
+    echo "❌ curl is required to verify GitHub usernames"
+    return 1
+  fi
+  
+  # Make API request to GitHub
+  response=$(curl -s -o /dev/null -w "%{http_code}" "https://api.github.com/users/$username")
+  
+  if [ "$response" = "200" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+function show_status() {
+  if [ ! -d ".git" ]; then
+    echo "Error: Not a git repository"
+    exit 1
+  fi
+
+  if [ -f "$PAIR_FILE" ]; then
+    PAIRER=$(cat "$PAIR_FILE")
+    
+    # Read the location preference (default to title if not set)
+    LOCATION="title"
+    if [ -f "$LOCATION_FILE" ]; then
+      LOCATION=$(cat "$LOCATION_FILE")
+    fi
+    
+    echo "✅ Pair mode is ON"
+    echo "   Paired with: @$PAIRER"
+    echo "   Pair info location: $LOCATION"
+  else
+    echo "❌ Pair mode is OFF"
+  fi
+}
+
+function enable_pair_mode() {
+  if [ -z "$1" ]; then
+    echo "Error: Please provide a username"
+    show_help
+    exit 1
+  fi
+
+  # Verify GitHub username
+  if ! verify_github_username "$1"; then
+    echo "❌ Invalid GitHub username: @$1"
+    echo "   Please run the command again with a valid GitHub username"
+    exit 1
+  fi
+
+  echo "$1" > "$PAIR_FILE"
+  echo "✅ Pair mode enabled with @$1"
+}
+
+function disable_pair_mode() {
+  if [ ! -f "$PAIR_FILE" ]; then
+    echo "❌ Pair mode is already OFF"
+    echo -n "Would you like to activate it? (y/n) [y]: "
+    read -n1 response
+    echo  # Add a newline after the single character input
+    response=${response:-y}
+    
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      interactive_mode
+    else
+      echo "Pair mode remains OFF"
+      exit 0
+    fi
+    return
+  fi
+  
+  rm -f "$PAIR_FILE"
+  rm -f "$LOCATION_FILE"
+  echo "✅ Pair mode disabled"
+}
+
+function set_location() {
+  if [ -z "$1" ]; then
+    echo "Error: Please specify location (title/body)"
+    show_help
+    exit 1
+  fi
+  
+  if [ "$1" != "title" ] && [ "$1" != "body" ]; then
+    echo "Error: Location must be either 'title' or 'body'"
+    show_help
+    exit 1
+  fi
+  
+  echo "$1" > "$LOCATION_FILE"
+  echo "✅ Pair info will be shown in the $1"
+}
+
+function interactive_mode() {
+  echo "🤝 Git Pair Mode"
+  echo "----------------"
+  read -p "Enter GitHub username to pair with (without @): " username
+  
+  # Remove @ if user included it
+  username=${username#@}
+  
+  if [ -z "$username" ]; then
+    echo "❌ No username provided"
+    exit 1
+  fi
+
+  # Verify GitHub username
+  if ! verify_github_username "$username"; then
+    echo "❌ Invalid GitHub username: @$username"
+    echo "   Please run 'git pair' again with a valid GitHub username"
+    exit 1
+  fi
+  
+  enable_pair_mode "$username"
+  
+  echo ""
+  echo "📝 Commit Options:"
+  echo "----------------"
+  echo "1. Regular commit (git commit):"
+  echo "   - Pair info appears in commit body"
+  echo "   - Example: git commit -m \"your message\""
+  echo ""
+  echo "2. Title-line commit (git pair-commit):"
+  echo "   - Pair info appears in commit title"
+  echo "   - Example: git pair-commit -m \"your message\""
+  echo ""
+  read -p "Where to show pair info by default? [title/body] (default: title): " location
+  location=${location:-title}
+  set_location "$location"
+  
+  echo ""
+  echo "✅ Pair mode is now active!"
+  echo "   Use 'git pair status' to check current settings"
+  echo "   Use 'git pair --off' to disable pair mode"
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --with)
+      enable_pair_mode "$2"
+      shift 2
+      ;;
+    --off)
+      disable_pair_mode
+      shift
+      ;;
+    --location)
+      set_location "$2"
+      shift 2
+      ;;
+    status)
+      show_status
+      exit 0
+      ;;
+    --help)
+      show_help
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      show_help
+      exit 1
+      ;;
+  esac
+done
+
+# If no arguments provided, enter interactive mode
+if [ $# -eq 0 ]; then
+  interactive_mode
+fi 
