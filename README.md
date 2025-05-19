@@ -1,6 +1,6 @@
 # Git Pair Mode
 
-A lightweight tool to annotate Git commits with pair programming metadata — no backend required.
+A lightweight tool to annotate Git commits with pair programming metadata - and get pairing stats.
 
 ## 🔧 Features
 
@@ -57,11 +57,9 @@ chmod +x install.sh
 ```bash
 # Enable pair mode (interactive)
 git pair
-# => Prompts for GitHub username and shows available commands
 
 # Enable pair mode with specific user
 git pair --with username
-# => Verifies GitHub username and shows available commands
 
 # Check pair mode status
 git pair status
@@ -175,9 +173,15 @@ For more details about the test suite, see the [tests README](tests/README.md).
 
 If commands aren't found:
 
-1. Make sure script is executable: `chmod +x git-pair`
-2. Verify it's in your PATH: `which git-pair`
-3. Check `/usr/local/bin` is in your PATH: `echo $PATH`
+1. If installed via Homebrew:
+
+   - Verify installation: `brew list git-pair-mode`
+   - Check Homebrew's bin directory is in your PATH: `echo $PATH`
+
+2. If installed manually:
+   - Make sure script is executable: `chmod +x git-pair`
+   - Verify it's in your PATH: `which git-pair`
+   - Check `/usr/local/bin` is in your PATH: `echo $PATH`
 
 If GitHub username verification fails:
 
